@@ -32,8 +32,9 @@ namespace Calculator.Tests
             return controller.Calculate(request);
         }
 
-        // ---------- Часть 1: Happy Path ----------
+        // ========== Позитивные тесты ==========
 
+        // Тест 1 - Happy Path
         [Fact]
         public void Calculate_WithoutInsurance_ReturnsOkAndCorrectAmount()
         {
@@ -43,29 +44,16 @@ namespace Calculator.Tests
             Assert.Equal(500m, GetTotal(result));
         }
 
-        // ---------- Часть 2: Поиск бага (страховка) ----------
-
-        // Если в контроллере стоит total *= 5, получим 2500 и тест упадёт
+        // Тест 2 - со страховкой (поиск бага)
         [Fact]
         public void Calculate_WithInsurance_AddsFivePercent()
         {
             var result = Run(100, 5, true);
 
-            Assert.Equal(525m, GetTotal(result)); // 500 * 1.05
+            Assert.Equal(525m, GetTotal(result));
         }
 
-        // ---------- Негативные сценарии ----------
-
-        [Theory]
-        [InlineData(-1)]
-        [InlineData(0)]
-        public void Calculate_NonPositiveDays_ReturnsBadRequest(int days)
-        {
-            var result = Run(100, days, false);
-
-            Assert.IsType<BadRequestObjectResult>(result);
-        }
-
+        // Тест 3 - нулевая стоимость дня
         [Fact]
         public void Calculate_ZeroDailyCost_ReturnsZero()
         {
@@ -74,9 +62,7 @@ namespace Calculator.Tests
             Assert.Equal(0m, GetTotal(result));
         }
 
-        // ---------- Округление ----------
-
-        // 100.50 * 3 = 301.50
+        // Тест 4 - копейки без страховки
         [Fact]
         public void Calculate_DecimalDailyCost_CalculatesToKopecks()
         {
@@ -85,13 +71,24 @@ namespace Calculator.Tests
             Assert.Equal(301.50m, GetTotal(result));
         }
 
-        // 100.50 * 3 * 1.05 = 316.575 (контроллер не округляет, decimal считает точно)
+        // Тест 5 - копейки со страховкой
         [Fact]
         public void Calculate_DecimalWithInsurance_IsCalculatedExactly()
         {
             var result = Run(100.50m, 3, true);
 
             Assert.Equal(316.575m, GetTotal(result));
+        }
+
+        // ========== Негативные тесты ==========
+        [Theory]
+        [InlineData(-1)] // Тест 6
+        [InlineData(0)]  // Тест 7
+        public void Calculate_NonPositiveDays_ReturnsBadRequest(int days)
+        {
+            var result = Run(100, days, false);
+
+            Assert.IsType<BadRequestObjectResult>(result);
         }
     }
 }
